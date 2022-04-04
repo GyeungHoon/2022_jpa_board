@@ -27,7 +27,6 @@ public class ArticleController {
     @ResponseBody
     public Article showDetail(long id) {
         Optional<Article> article = articleRepository.findById(id);
-
         return article.get();
     }
 
@@ -36,30 +35,55 @@ public class ArticleController {
     public Article doModify(long id, String title, String body) {
         Article article = articleRepository.findById(id).get();
 
-        if(title != null){
+        if ( title != null ) {
             article.setTitle(title);
         }
-        if(body != null){
+
+        if ( body != null ) {
             article.setBody(body);
         }
+
         article.setUpdateDate(LocalDateTime.now());
+
         articleRepository.save(article);
 
         return article;
     }
 
-
     @RequestMapping("doDelete")
     @ResponseBody
     public String doDelete(long id) {
-        if(articleRepository.existsById(id) == false){
+        if ( articleRepository.existsById(id) == false ) {
             return "%d번 게시물은 이미 삭제되었거나 존재하지 않습니다.".formatted(id);
         }
 
-       articleRepository.deleteById(id);
-
+        articleRepository.deleteById(id);
         return "%d번 게시물이 삭제되었습니다.".formatted(id);
     }
 
+    @RequestMapping("doWrite")
+    @ResponseBody
+    public String doWrite(String title, String body) {
+        if ( title == null || title.trim().length() == 0 ) {
+            return "제목을 입력해주세요.";
+        }
 
+        title = title.trim();
+
+        if ( body == null || body.trim().length() == 0 ) {
+            return "내용을 입력해주세요.";
+        }
+
+        body = body.trim();
+
+        Article article = new Article();
+        article.setRegDate(LocalDateTime.now());
+        article.setUpdateDate(LocalDateTime.now());
+        article.setTitle(title);
+        article.setBody(body);
+
+        articleRepository.save(article);
+
+        return "%d번 게시물이 생성되었습니다.".formatted(article.getId());
+    }
 }
