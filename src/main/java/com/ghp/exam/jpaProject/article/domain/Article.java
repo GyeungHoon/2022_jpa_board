@@ -7,6 +7,7 @@ import lombok.Setter;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
+
 @Entity
 @Getter
 @Setter
@@ -18,9 +19,6 @@ public class Article {
     private LocalDateTime updateDate;
     private String title;
     private String body;
-    private long userId;
-
     @ManyToOne
     private User user;
-
 }
