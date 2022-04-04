@@ -1,7 +1,5 @@
 package com.ghp.exam.jpaProject.user.controller;
 
-import com.ghp.exam.jpaProject.article.dao.ArticleRepository;
-import com.ghp.exam.jpaProject.article.domain.Article;
 import com.ghp.exam.jpaProject.user.dao.UserRepository;
 import com.ghp.exam.jpaProject.user.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,100 +8,97 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 @Controller
 @RequestMapping("/usr/user")
 public class UserController {
     @Autowired
-    private ArticleRepository articleRepository;
-
-    @Autowired
     private UserRepository userRepository;
 
-    @RequestMapping("list")
+    @RequestMapping("doLogin")
     @ResponseBody
-    public List<Article> showList() {
-        return articleRepository.findAll();
-    }
-
-    @RequestMapping("detail")
-    @ResponseBody
-    public Article showDetail(long id) {
-        Optional<Article> article = articleRepository.findById(id);
-        return article.get();
-    }
-
-    @RequestMapping("doModify")
-    @ResponseBody
-    public Article doModify(long id, String title, String body) {
-        Article article = articleRepository.findById(id).get();
-
-        if ( title != null ) {
-            article.setTitle(title);
+    public String doLogin(String email, String password) {
+        if (email == null || email.trim().length() == 0) {
+            return "이메일을 입력해주세요.";
         }
 
-        if ( body != null ) {
-            article.setBody(body);
+        email = email.trim();
+
+
+//      User user = userRepository.findByEmail(email).orElseGet(() -> null);
+        Optional<User> user = userRepository.findByEmail(email);
+        if (user.isEmpty()) {
+            return "일치하는 회원이 존재하지 않습니다.";
         }
 
-        article.setUpdateDate(LocalDateTime.now());
-
-        articleRepository.save(article);
-
-        return article;
-    }
-
-    @RequestMapping("doDelete")
-    @ResponseBody
-    public String doDelete(long id) {
-        if ( articleRepository.existsById(id) == false ) {
-            return "%d번 게시물은 이미 삭제되었거나 존재하지 않습니다.".formatted(id);
+        if (password == null || password.trim().length() == 0) {
+            return "비밀번호를 입력해주세요.";
         }
 
-        articleRepository.deleteById(id);
-        return "%d번 게시물이 삭제되었습니다.".formatted(id);
+        password = password.trim();
+
+        System.out.println("user.getPassword() : " + user.get().getPassword());
+        System.out.println("password : " + password);
+
+        if (user.get().getPassword().equals(password) == false) {
+            return "비밀번호가 일치하지 않습니다.";
+        }
+
+        return "%s님 환영합니다.".formatted(user.get().getName());
     }
 
     @RequestMapping("doJoin")
     @ResponseBody
-    public String doJoin(String name, String password, String email) {
-
-        if ( name == null || name.trim().length() == 0 ) {
+    public String doJoin(String name, String email, String password) {
+        if (name == null || name.trim().length() == 0) {
             return "이름을 입력해주세요.";
         }
 
         name = name.trim();
 
-        if ( password == null || password.trim().length() == 0 ) {
-            return "비밀번호을 입력해주세요.";
-        }
-
-        password = password.trim();
-
-
-        if ( email == null || email.trim().length() == 0 ) {
+        if (email == null || email.trim().length() == 0) {
             return "이메일을 입력해주세요.";
         }
+
         email = email.trim();
 
         boolean existsByEmail = userRepository.existsByEmail(email);
 
-        if(existsByEmail){
-            return "입력하신 이메일(%s)는 사용중 입니다.".formatted(email);
+        if (existsByEmail) {
+            return "입력하신 이메일(%s)은 이미 사용중입니다.".formatted(email);
         }
 
+        if (password == null || password.trim().length() == 0) {
+            return "비밀번호를 입력해주세요.";
+        }
+
+        password = password.trim();
 
         User user = new User();
         user.setRegDate(LocalDateTime.now());
         user.setUpdateDate(LocalDateTime.now());
         user.setName(name);
-        user.setPassword(password);
         user.setEmail(email);
+        user.setPassword(password);
 
         userRepository.save(user);
 
         return "%d번 회원이 생성되었습니다.".formatted(user.getId());
     }
+
+
+    @RequestMapping("me")
+    @ResponseBody
+    public User showMe(long userId) {
+
+        Optional<User> user = userRepository.findById(userId);
+
+        if(user.isEmpty()){
+            return null;
+        }
+
+        return user.get();
+    }
+
 }
