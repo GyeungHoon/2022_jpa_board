@@ -5,11 +5,17 @@
     <title>게시물 목록</title>
 </head>
 <body>
+
+
+<div>
+    <a href="write">글쓰기</a>
+</div>
 <h1>게시물 목록</h1>
 <ul>
     <li th:each="article : ${articles}">
         [[${article.id}]] / [[${article.title}]] / [[${article.regDate}]]
     </li>
 </ul>
+
 </body>
 </html>
