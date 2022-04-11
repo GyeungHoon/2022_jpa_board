@@ -40,6 +40,15 @@ public class ArticleController {
         return "usr/article/detail";
     }
 
+    @RequestMapping("modify")
+    public String showModify(long id , Model model) {
+        Optional<Article> opArticle = articleRepository.findById(id);
+        Article article = opArticle.get();
+
+        model.addAttribute("article", article);
+        return "usr/article/modify";
+    }
+
     @RequestMapping("doModify")
     @ResponseBody
     public Article doModify(long id, String title, String body) {
