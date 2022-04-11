@@ -44,7 +44,6 @@ public class ArticleController {
     public String showModify(long id , Model model) {
         Optional<Article> opArticle = articleRepository.findById(id);
         Article article = opArticle.get();
-
         model.addAttribute("article", article);
         return "usr/article/modify";
     }
@@ -73,11 +72,11 @@ public class ArticleController {
     @ResponseBody
     public String doDelete(long id) {
         if (articleRepository.existsById(id) == false) {
-            return "%d번 게시물은 이미 삭제되었거나 존재하지 않습니다.".formatted(id);
+            return "<script> alert('%d번 게시물은 이미 삭제되었거나 존재하지 않습니다.');  location.replace('list')</script>".formatted(id);
         }
 
         articleRepository.deleteById(id);
-        return "%d번 게시물이 삭제되었습니다.".formatted(id);
+        return "<script>alert('%d번 게시물이 삭제되었습니다'); location.replace('list')</script>".formatted(id);
     }
 
     @RequestMapping("write")
