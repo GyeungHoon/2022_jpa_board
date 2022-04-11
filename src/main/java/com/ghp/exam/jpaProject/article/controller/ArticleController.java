@@ -19,15 +19,15 @@ import java.util.Optional;
 public class ArticleController {
     @Autowired
     private ArticleRepository articleRepository;
-
     @Autowired
     private UserRepository userRepository;
 
     @RequestMapping("list")
     public String showList(Model model) {
+        List<Article> articles = articleRepository.findAll();
 
-        model.addAttribute("age", 21);
-        model.addAttribute("name", "폴");
+        model.addAttribute("articles", articles);
+
         return "usr/article/list";
     }
 
