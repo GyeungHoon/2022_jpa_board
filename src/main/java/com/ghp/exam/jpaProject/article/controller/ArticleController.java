@@ -10,6 +10,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.servlet.http.HttpSession;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -31,23 +32,6 @@ public class ArticleController {
         return "usr/article/list";
     }
 
-    @RequestMapping("detail")
-    public String showDetail(long id , Model model) {
-        Optional<Article> opArticle = articleRepository.findById(id);
-        Article article = opArticle.get();
-
-        model.addAttribute("article", article);
-        return "usr/article/detail";
-    }
-
-    @RequestMapping("modify")
-    public String showModify(long id , Model model) {
-        Optional<Article> opArticle = articleRepository.findById(id);
-        Article article = opArticle.get();
-        model.addAttribute("article", article);
-        return "usr/article/modify";
-    }
-
     @RequestMapping("doModify")
     @ResponseBody
     public String doModify(long id, String title, String body) {
@@ -65,30 +49,83 @@ public class ArticleController {
 
         articleRepository.save(article);
 
-        return "<script>alert('%d번 게시물이 수정되었습니다'); location.replace('detail?id=%d')</script>".formatted(article.getId(),article.getId());
+        return """
+                <script>
+                alert('%d번 게시물이 수정되었습니다.');
+                location.replace('detail?id=%d');
+                </script>
+                """.formatted(article.getId(), article.getId());
     }
 
     @RequestMapping("doDelete")
     @ResponseBody
     public String doDelete(long id) {
         if (articleRepository.existsById(id) == false) {
-            return "<script> alert('%d번 게시물은 이미 삭제되었거나 존재하지 않습니다.');  location.replace('list')</script>".formatted(id);
+            return """
+                    <script>
+                    alert('%d번 게시물은 이미 삭제되었거나 존재하지 않습니다.');
+                    history.back();
+                    </script>
+                    """.formatted(id);
         }
 
         articleRepository.deleteById(id);
-        return "<script>alert('%d번 게시물이 삭제되었습니다'); location.replace('list')</script>".formatted(id);
+
+        return """
+                <script>
+                alert('%d번 게시물이 삭제되었습니다.');
+                location.replace('list');
+                </script>
+                """
+                .formatted(id);
     }
 
     @RequestMapping("write")
-    public String ShowWrite() {
-
+    public String showWrite() {
         return "usr/article/write";
-        }
+    }
 
+    @RequestMapping("detail")
+    public String showDetail(long id, Model model) {
+        Optional<Article> opArticle = articleRepository.findById(id);
+        Article article = opArticle.get();
+
+        model.addAttribute("article", article);
+
+        return "usr/article/detail";
+    }
+
+    @RequestMapping("modify")
+    public String showModify(long id, Model model) {
+        Optional<Article> opArticle = articleRepository.findById(id);
+        Article article = opArticle.get();
+
+        model.addAttribute("article", article);
+
+        return "usr/article/modify";
+    }
 
     @RequestMapping("doWrite")
     @ResponseBody
-    public String doWrite(String title, String body) {
+    public String doWrite(String title, String body, HttpSession session) {
+        boolean isLogined = false;
+        long loginedUserId = 0;
+
+        if ( session.getAttribute("loginedUserId") != null ) {
+            isLogined = true;
+            loginedUserId = (long)session.getAttribute("loginedUserId");
+        }
+        
+        if(isLogined == false){
+            return """
+                <script>
+                alert('로그인 후 이용해주세요.');
+                history.back();
+                </script>
+                """;
+        }
+        
+
         if (title == null || title.trim().length() == 0) {
             return "제목을 입력해주세요.";
         }
@@ -106,11 +143,16 @@ public class ArticleController {
         article.setUpdateDate(LocalDateTime.now());
         article.setTitle(title);
         article.setBody(body);
-        User user = userRepository.findById(1L).get();
+        User user = userRepository.findById(loginedUserId).get();
         article.setUser(user);
 
         articleRepository.save(article);
 
-        return "<script>alert('%d번 게시물이 생성되었습니다'); location.replace('list')</script>".formatted(article.getId());
+        return """
+                <script>
+                alert('%d번 게시물이 생성되었습니다.');
+                location.replace('list');
+                </script>
+                """.formatted(article.getId());
     }
 }
