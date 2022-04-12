@@ -32,10 +32,70 @@ public class ArticleController {
         return "usr/article/list";
     }
 
+
+    @RequestMapping("modify")
+    public String showModify(long id, Model model, HttpSession session) {
+        boolean isLogined = false;
+        long loginedUserId = 0;
+
+        if (session.getAttribute("loginedUserId") != null) {
+            isLogined = true;
+            loginedUserId = (long) session.getAttribute("loginedUserId");
+        }
+
+
+        if (isLogined == false) {
+            model.addAttribute("msg", "로그인 후 이용해주세요");
+            model.addAttribute("historyBack", "true");
+            return "common/js";
+        }
+
+        Optional<Article> opArticle = articleRepository.findById(id);
+        Article article = opArticle.get();
+
+        model.addAttribute("article", article);
+
+        if (article.getUser().getId() != loginedUserId) {
+
+            model.addAttribute("msg","권한이 없습니다");
+            model.addAttribute("historyBack",true);
+
+            return "common/js";
+        }
+
+        return "usr/article/modify";
+    }
+
     @RequestMapping("doModify")
     @ResponseBody
-    public String doModify(long id, String title, String body) {
+    public String doModify(long id, String title, String body,HttpSession session) {
+
+        boolean isLogined = false;
+        long loginedUserId = 0;
+
+        if (session.getAttribute("loginedUserId") != null) {
+            isLogined = true;
+            loginedUserId = (long) session.getAttribute("loginedUserId");
+        }
+        if (isLogined == false) {
+            return """
+                    <script>
+                    alert('로그인 후 이용해주세요.');
+                    history.back();
+                    </script>
+                    """;
+        }
+
         Article article = articleRepository.findById(id).get();
+
+        if (article.getUser().getId() != loginedUserId) {
+            return """
+                    <script>
+                    alert('%d번 게시물은 권한이 없습니다.');
+                    history.back();
+                    </script>
+                    """.formatted(id);
+        }
 
         if (title != null) {
             article.setTitle(title);
@@ -120,15 +180,6 @@ public class ArticleController {
         return "usr/article/detail";
     }
 
-    @RequestMapping("modify")
-    public String showModify(long id, Model model) {
-        Optional<Article> opArticle = articleRepository.findById(id);
-        Article article = opArticle.get();
-
-        model.addAttribute("article", article);
-
-        return "usr/article/modify";
-    }
 
 
     @RequestMapping("write")
