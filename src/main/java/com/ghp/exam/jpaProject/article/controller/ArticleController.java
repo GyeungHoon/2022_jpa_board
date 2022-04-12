@@ -59,11 +59,40 @@ public class ArticleController {
 
     @RequestMapping("doDelete")
     @ResponseBody
-    public String doDelete(long id) {
+    public String doDelete(long id, HttpSession session, Model model) {
+
+        boolean isLogined = false;
+        long loginedUserId = 0;
+
+        if (session.getAttribute("loginedUserId") != null) {
+            isLogined = true;
+            loginedUserId = (long) session.getAttribute("loginedUserId");
+        }
+        if (isLogined == false) {
+            return """
+                    <script>
+                    alert('로그인 후 이용해주세요.');
+                    history.back();
+                    </script>
+                    """;
+        }
+
+
         if (articleRepository.existsById(id) == false) {
             return """
                     <script>
                     alert('%d번 게시물은 이미 삭제되었거나 존재하지 않습니다.');
+                    history.back();
+                    </script>
+                    """.formatted(id);
+        }
+
+        Article article = articleRepository.findById(id).get();
+
+        if (article.getUser().getId() != loginedUserId) {
+            return """
+                    <script>
+                    alert('%d번 게시물은 권한이 없습니다.');
                     history.back();
                     </script>
                     """.formatted(id);
@@ -107,15 +136,15 @@ public class ArticleController {
         boolean isLogined = false;
         long loginedUserId = 0;
 
-        if ( session.getAttribute("loginedUserId") != null ) {
+        if (session.getAttribute("loginedUserId") != null) {
             isLogined = true;
-            loginedUserId = (long)session.getAttribute("loginedUserId");
+            loginedUserId = (long) session.getAttribute("loginedUserId");
         }
 
 
-        if(isLogined == false){
-            model.addAttribute("msg","로그인 후 이용해주세요");
-            model.addAttribute("historyBack","true");
+        if (isLogined == false) {
+            model.addAttribute("msg", "로그인 후 이용해주세요");
+            model.addAttribute("historyBack", "true");
             return "common/js";
         }
 
@@ -128,20 +157,20 @@ public class ArticleController {
         boolean isLogined = false;
         long loginedUserId = 0;
 
-        if ( session.getAttribute("loginedUserId") != null ) {
+        if (session.getAttribute("loginedUserId") != null) {
             isLogined = true;
-            loginedUserId = (long)session.getAttribute("loginedUserId");
+            loginedUserId = (long) session.getAttribute("loginedUserId");
         }
-        
-        if(isLogined == false){
+
+        if (isLogined == false) {
             return """
-                <script>
-                alert('로그인 후 이용해주세요.');
-                history.back();
-                </script>
-                """;
+                    <script>
+                    alert('로그인 후 이용해주세요.');
+                    history.back();
+                    </script>
+                    """;
         }
-        
+
 
         if (title == null || title.trim().length() == 0) {
             return "제목을 입력해주세요.";
